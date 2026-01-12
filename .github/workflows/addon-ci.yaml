@@ -90,28 +90,6 @@ jobs:
         env:
           SHELLCHECK_OPTS: -s bash
 
-  lint-yamllint:
-    name: YAMLLint
-    runs-on: ubuntu-latest
-    steps:
-      - name: ⤵️ Check out code from GitHub
-        uses: actions/checkout@v6
-      - name: 🚀 Run YAMLLint
-        uses: frenck/action-yamllint@v1.5
-
-  lint-prettier:
-    name: Prettier
-    runs-on: ubuntu-latest
-    steps:
-      - name: ⤵️ Check out code from GitHub
-        uses: actions/checkout@v6
-      - name: 🚀 Run Prettier
-        uses: creyD/prettier_action@v4.6
-        with:
-          prettier_options: --write **/*.{json,js,md,yaml}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   build:
     name: Build ${{ matrix.architecture }}
     needs:
@@ -119,9 +97,7 @@ jobs:
       - lint-addon
       - lint-hadolint
       - lint-json
-      - lint-prettier
       - lint-shellcheck
-      - lint-yamllint
     runs-on: ${{ contains(fromJson('["armhf", "armv7", "aarch64"]'), matrix.architecture) && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     strategy:
       matrix:
@@ -178,7 +154,7 @@ jobs:
           file: ${{ needs.information.outputs.target }}/Dockerfile
           cache-from: |
             type=local,src=/tmp/.docker-cache
-            ghcr.io/${{ env.IMAGE_REPOSITORY }}/${{ needs.information.outputs.slug }}/${{ matrix.architecture }}:edge
+            ghcr.io/martinkuhl/${{ needs.information.outputs.slug }}/${{ matrix.architecture }}:edge
           cache-to: type=local,mode=max,dest=/tmp/.docker-cache-new
           platforms: ${{ steps.flags.outputs.platform }}
           build-args: |
