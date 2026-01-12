@@ -166,6 +166,9 @@ jobs:
         if: steps.flags.outputs.from != 'null'
         run: docker pull "${{ steps.flags.outputs.from }}"
       - name: convert repository name to lowercase
+        env:
+          # ruleid: allowed-unsecure-commands
+          ACTIONS_ALLOW_UNSECURE_COMMANDS: true
         run: echo ::set-env name=IMAGE_REPOSITORY::$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')
       - name: 🚀 Build
         uses: docker/build-push-action@v6.18.0
