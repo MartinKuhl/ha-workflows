@@ -29,7 +29,7 @@ on:
         type: string
     secrets:
       DISPATCH_TOKEN:
-        required: true
+        required: false
 
 jobs:
   information:
@@ -137,20 +137,22 @@ jobs:
       - name: ⤵️ Download base image
         if: steps.flags.outputs.from != 'null'
         run: docker pull "${{ steps.flags.outputs.from }}"
+      - name: convert repository name to lowercase
+        run: echo ::set-env name=IMAGE_REPOSITORY::$(echo ${{ github.repository_owner }} | tr '[:upper:]' '[:lower:]')
       - name: 🚀 Build
         uses: docker/build-push-action@v6.18.0
         with:
           load: true
           # yamllint disable rule:line-length
           tags: |
-            ghcr.io/${{ github.repository_owner }}/${{ needs.information.outputs.slug }}/${{ matrix.architecture }}:${{ needs.information.outputs.environment }}
-            ghcr.io/${{ github.repository_owner }}/${{ needs.information.outputs.slug }}/${{ matrix.architecture }}:${{ needs.information.outputs.version }}
+            ghcr.io/${{ env.IMAGE_REPOSITORY }}/${{ needs.information.outputs.slug }}/${{ matrix.architecture }}:${{ needs.information.outputs.environment }}
+            ghcr.io/${{ env.IMAGE_REPOSITORY }}/${{ needs.information.outputs.slug }}/${{ matrix.architecture }}:${{ needs.information.outputs.version }}
           # yamllint enable rule:line-length
           context: ${{ needs.information.outputs.target }}
           file: ${{ needs.information.outputs.target }}/Dockerfile
           cache-from: |
             type=local,src=/tmp/.docker-cache
-            ghcr.io/${{ github.repository_owner }}/${{ needs.information.outputs.slug }}/${{ matrix.architecture }}:edge
+            ghcr.io/${{ env.IMAGE_REPOSITORY }}/${{ needs.information.outputs.slug }}/${{ matrix.architecture }}:edge
           cache-to: type=local,mode=max,dest=/tmp/.docker-cache-new
           platforms: ${{ steps.flags.outputs.platform }}
           build-args: |
@@ -174,80 +176,6 @@ jobs:
         # yamllint disable rule:line-length
         run: |
           docker push \
-            "ghcr.io/${{ github.repository_owner }}/${{ needs.information.outputs.slug }}/${{ matrix.architecture }}:${{ needs.information.outputs.environment }}"
+            "ghcr.io/${{ env.IMAGE_REPOSITORY }}/${{ needs.information.outputs.slug }}/${{ matrix.architecture }}:${{ needs.information.outputs.environment }}"
           docker push \
-            "ghcr.io/${{ github.repository_owner }}/${{ needs.information.outputs.slug }}/${{ matrix.architecture }}:${{ needs.information.outputs.version }}"
-
-  publish-edge:
-    name: 📢 Publish to edge repository
-    if: needs.information.outputs.environment == 'edge'
-    needs:
-      - information
-      - deploy
-    environment:
-      name: ${{ needs.information.outputs.environment }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: 🚀 Dispatch repository updater update signal
-        uses: peter-evans/repository-dispatch@v4.0.1
-        with:
-          token: ${{ secrets.DISPATCH_TOKEN }}
-          repository: ${{ github.repository_owner }}/${{ inputs.repository_edge }}
-          event-type: update
-          client-payload: >
-            {
-              "addon": "${{ needs.information.outputs.slug }}",
-              "name": "${{ needs.information.outputs.name }}",
-              "repository": "${{ github.repository }}",
-              "version": "${{ needs.information.outputs.version }}"
-            }
-
-  publish-beta:
-    name: 📢 Publish to beta repository
-    if: |
-      needs.information.outputs.environment == 'beta' ||
-      needs.information.outputs.environment == 'stable'
-    needs:
-      - information
-      - deploy
-    environment:
-      name: ${{ needs.information.outputs.environment }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: 🚀 Dispatch repository updater update signal
-        uses: peter-evans/repository-dispatch@v4.0.1
-        with:
-          token: ${{ secrets.DISPATCH_TOKEN }}
-          repository: ${{ github.repository_owner }}/${{ inputs.repository_beta }}
-          event-type: update
-          client-payload: >
-            {
-              "addon": "${{ needs.information.outputs.slug }}",
-              "name": "${{ needs.information.outputs.name }}",
-              "repository": "${{ github.repository }}",
-              "version": "${{ github.event.release.tag_name }}"
-            }
-
-  publish-stable:
-    name: 📢 Publish to stable repository
-    if: needs.information.outputs.environment == 'stable'
-    needs:
-      - information
-      - deploy
-    environment:
-      name: ${{ needs.information.outputs.environment }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: 🚀 Dispatch repository updater update signal
-        uses: peter-evans/repository-dispatch@v4.0.1
-        with:
-          token: ${{ secrets.DISPATCH_TOKEN }}
-          repository: ${{ github.repository_owner }}/${{ inputs.repository }}
-          event-type: update
-          client-payload: >
-            {
-              "addon": "${{ needs.information.outputs.slug }}",
-              "name": "${{ needs.information.outputs.name }}",
-              "repository": "${{ github.repository }}",
-              "version": "${{ github.event.release.tag_name }}"
-            }
+            "ghcr.io/${{ env.IMAGE_REPOSITORY }}/${{ needs.information.outputs.slug }}/${{ matrix.architecture }}:${{ needs.information.outputs.version }}"
