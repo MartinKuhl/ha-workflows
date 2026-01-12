@@ -27,9 +27,6 @@ on:
         description: The name of the beta repository
         required: false
         type: string
-    secrets:
-      DISPATCH_TOKEN:
-        required: false
 
 jobs:
   information:
