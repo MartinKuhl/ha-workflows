@@ -17,25 +17,11 @@ on:
         description: The name of the stable repository
         required: false
         type: string
-      repository_edge:
-        default: "repository-edge"
-        description: The name of the edge repository
-        required: false
-        type: string
-      repository_beta:
-        default: "repository-beta"
-        description: The name of the beta repository
-        required: false
-        type: string
 
 jobs:
   information:
     if: |
       github.event_name == 'release'
-      || (
-        github.event_name == 'workflow_run'
-        && github.event.workflow_run.conclusion == 'success'
-      )
     name: ℹ️ Gather add-on information
     runs-on: ubuntu-latest
     outputs:
@@ -142,14 +128,14 @@ jobs:
           load: true
           # yamllint disable rule:line-length
           tags: |
-            ghcr.io/${{ env.IMAGE_REPOSITORY }}/${{ needs.information.outputs.slug }}/${{ matrix.architecture }}:${{ needs.information.outputs.environment }}
-            ghcr.io/${{ env.IMAGE_REPOSITORY }}/${{ needs.information.outputs.slug }}/${{ matrix.architecture }}:${{ needs.information.outputs.version }}
+            ghcr.io/martinkuhl/${{ needs.information.outputs.slug }}/${{ matrix.architecture }}:${{ needs.information.outputs.environment }}
+            ghcr.io/martinkuhl/${{ needs.information.outputs.slug }}/${{ matrix.architecture }}:${{ needs.information.outputs.version }}
           # yamllint enable rule:line-length
           context: ${{ needs.information.outputs.target }}
           file: ${{ needs.information.outputs.target }}/Dockerfile
           cache-from: |
             type=local,src=/tmp/.docker-cache
-            ghcr.io/${{ env.IMAGE_REPOSITORY }}/${{ needs.information.outputs.slug }}/${{ matrix.architecture }}:edge
+            ghcr.io/martinkuhl/${{ needs.information.outputs.slug }}/${{ matrix.architecture }}:edge
           cache-to: type=local,mode=max,dest=/tmp/.docker-cache-new
           platforms: ${{ steps.flags.outputs.platform }}
           build-args: |
@@ -173,6 +159,6 @@ jobs:
         # yamllint disable rule:line-length
         run: |
           docker push \
-            "ghcr.io/${{ env.IMAGE_REPOSITORY }}/${{ needs.information.outputs.slug }}/${{ matrix.architecture }}:${{ needs.information.outputs.environment }}"
+            "ghcr.io/martinkuhl/${{ needs.information.outputs.slug }}/${{ matrix.architecture }}:${{ needs.information.outputs.environment }}"
           docker push \
-            "ghcr.io/${{ env.IMAGE_REPOSITORY }}/${{ needs.information.outputs.slug }}/${{ matrix.architecture }}:${{ needs.information.outputs.version }}"
+            "ghcr.io/martinkuhl/${{ needs.information.outputs.slug }}/${{ matrix.architecture }}:${{ needs.information.outputs.version }}"
