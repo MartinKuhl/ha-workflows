@@ -165,4 +165,3 @@ jobs:
             "ghcr.io/${{ env.IMAGE_REPOSITORY }}/${{ needs.information.outputs.slug }}/${{ matrix.architecture }}:${{ needs.information.outputs.environment }}"
           docker push \
             "ghcr.io/${{ env.IMAGE_REPOSITORY }}/${{ needs.information.outputs.slug }}/${{ matrix.architecture }}:${{ needs.information.outputs.version }}"
-            
